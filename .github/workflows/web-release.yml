@@ -25,10 +25,7 @@ jobs:
   
       - name: Flutter upgrade
         run: flutter upgrade
-      
-      - name : Print Workspace Path
-        run: ${{ github.workspace }}
-
+        
       - name: Install Dependencies
         run: flutter pub get
 
