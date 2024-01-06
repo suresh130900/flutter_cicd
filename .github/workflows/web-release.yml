@@ -1,4 +1,51 @@
-name: Build Flutter Web
+# name: Build Flutter Web
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v2
+
+#     - name: Set up Flutter
+#       uses: subosito/flutter-action@v2
+#       with:
+#         flutter-version: '2.x' # Use the desired Flutter version
+
+
+#     - name: Flutter Channel
+#       run: flutter channel master
+
+#     - name: Flutter upgrade
+#       run: flutter upgrade
+
+#     - name: Install dependencies
+#       run: flutter pub get
+
+#     - name: Build Flutter Web
+#       run: flutter build web
+
+      
+#   deploy:
+#     runs-on: ubuntu-latest
+#     needs: build
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v2
+
+#     - name: Deploy to GitHub Pages
+#       uses: peaceiris/actions-gh-pages@v3
+#       with:
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+#         publish_dir: ./build/web
+
+name: Deploy to Server
 
 on:
   push:
@@ -6,41 +53,40 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '2.x' # Use the desired Flutter version
-
-
-    - name: Flutter Channel
-      run: flutter channel master
-
-    - name: Flutter upgrade
-      run: flutter upgrade
-
-    - name: Install dependencies
-      run: flutter pub get
-
-    - name: Build Flutter Web
-      run: flutter build web
-
-      
   deploy:
     runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/web
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Web
+        run: flutter build web
+
+      - name: Copy Build to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "${{ github.workspace }}/build/web/"
+          target: "/var/www/html/flutter-web"
+
+      - name: SSH into Server and Restart Nginx
+        uses: appleboy/ssh-action
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            sudo service nginx restart
