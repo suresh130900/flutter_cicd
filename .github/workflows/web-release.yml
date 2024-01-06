@@ -18,6 +18,13 @@ jobs:
       with:
         flutter-version: '2.x' # Use the desired Flutter version
 
+            
+    - name: Flutter Channel
+      run: flutter channel master
+
+    - name: Flutter upgrade
+      run: flutter upgrade
+
     - name: Install dependencies
       run: flutter pub get
 
